@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tryvion Colour analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Tryvion Colour Analyzer</h1>
+        <p class="subtitle">Upload your image and get personalized fashion color recommendations</p>
+
+        <div class="upload-box">
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="analyzeImage()">Analyze Fashion</button>
+        </div>
+
+        <div class="preview-section">
+            <img id="previewImage" src="" alt="Preview" style="display:none;">
+        </div>
+
+        <div id="loading" class="loading" style="display:none;">
+            Analyzing image...
+        </div>
+
+        <div id="result" class="result-box" style="display:none;">
+            <h2>Analysis Result</h2>
+
+            <p><strong>Skin Tone:</strong> <span id="skinTone"></span></p>
+            <p><strong>Skin Hex:</strong> <span id="skinHex"></span></p>
+            <p><strong>Face Confidence:</strong> <span id="confidence"></span></p>
+            <p><strong>Average RGB:</strong> <span id="averageRgb"></span></p>
+
+            <h3>Recommended Colors</h3>
+            <div id="colorCards" class="color-grid"></div>
+        </div>
+
+        <div id="errorBox" class="error-box" style="display:none;"></div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById("imageInput");
+        const previewImage = document.getElementById("previewImage");
+
+        imageInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                previewImage.src = URL.createObjectURL(file);
+                previewImage.style.display = "block";
+            }
+        });
+
+        async function analyzeImage() {
+            const file = imageInput.files[0];
+            const loading = document.getElementById("loading");
+            const resultBox = document.getElementById("result");
+            const errorBox = document.getElementById("errorBox");
+
+            resultBox.style.display = "none";
+            errorBox.style.display = "none";
+
+            if (!file) {
+                errorBox.innerText = "Please upload an image first.";
+                errorBox.style.display = "block";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            loading.style.display = "block";
+
+            try {
+                const response = await fetch("/analyze-fashion/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                loading.style.display = "none";
+
+                if (!response.ok) {
+                    errorBox.innerText = data.detail || data.error || "Something went wrong.";
+                    errorBox.style.display = "block";
+                    return;
+                }
+
+                document.getElementById("skinTone").innerText = data.skin_tone;
+                document.getElementById("skinHex").innerText = data.skin_hex;
+                document.getElementById("confidence").innerText = data.face_confidence;
+                document.getElementById("averageRgb").innerText = data.average_rgb.join(", ");
+
+                const colorCards = document.getElementById("colorCards");
+                colorCards.innerHTML = "";
+
+                data.recommended_colors.forEach(color => {
+                    const card = document.createElement("div");
+                    card.className = "color-card";
+
+                    card.innerHTML = `
+                        <div class="swatch" style="background:${color.hex};"></div>
+                        <p><strong>${color.name}</strong></p>
+                        <p>${color.hex}</p>
+                    `;
+
+                    colorCards.appendChild(card);
+                });
+
+                resultBox.style.display = "block";
+
+            } catch (error) {
+                loading.style.display = "none";
+                errorBox.innerText = "Error connecting to server.";
+                errorBox.style.display = "block";
+            }
+        }
+    </script>
+
+</body>
+</html>
