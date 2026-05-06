@@ -108,17 +108,6 @@ Stay tuned! 🚧
 
 ---
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Developers
-
-Maintained by [Your Name](https://github.com/alok-2002).
-Contributions welcome via issues or pull requests!
-
----
 
 ## ⭐ If you like this project, don't forget to ⭐ the repo!`
